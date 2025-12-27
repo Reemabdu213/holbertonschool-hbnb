@@ -67,9 +67,7 @@ Facade --> Services
 Services --> Models
 Services --> Repositories
 Repositories --> DB
-
----
-
+```
 2.4 Diagram Notes
 
 The only gateway from Presentation to Business is the Facade.
@@ -93,9 +91,11 @@ Core behaviors (methods)
 
 Relationships and multiplicity (1.., 0.., many-to-many)
 
----
-
 3.2 Detailed Class Diagram (Mermaid)
+
+
+```mermaid
+
 classDiagram
     class User {
         +UUID id
@@ -158,9 +158,7 @@ classDiagram
     Place "1" --> "0..*" Review : has
 
     Place "0..*" --> "0..*" Amenity : includes
-
----
-
+```
 3.3 Entity Explanations
 3.3.1 User
 
@@ -168,15 +166,11 @@ Role: Represents registered users in the system.
 Key Attributes: UUID4 id, timestamps, unique email, password_hash, name fields.
 Key Methods: create/update/delete user, authenticate.
 
----
-
 3.3.2 Place
 
 Role: Represents a property/listing available on the platform.
 Key Attributes: UUID4 id, timestamps, title, description, price, coordinates, owner reference.
 Key Methods: create/update/delete place, add/remove amenities.
-
----
 
 3.3.3 Review
 
@@ -184,15 +178,11 @@ Role: Represents user feedback for a specific place.
 Key Attributes: UUID4 id, timestamps, text, rating, references to user and place.
 Key Methods: create/update/delete review, validate rating (1–5).
 
----
-
 3.3.4 Amenity
 
 Role: Represents reusable features/services linked to places.
 Key Attributes: UUID4 id, timestamps, name, description.
 Key Methods: create/update/delete amenity.
-
----
 
 3.4 Relationship Rationale
 
@@ -212,9 +202,10 @@ Place ↔ Amenity (0.. to 0..)**: many-to-many association.
 Sequence diagrams illustrate the request flow across layers:
 Client → API → Facade → Business Logic → Repositories → Database, including validations and error paths
 
----
+4.2 Create User - POST /users
 
-4.2 Create User — POST /users
+```mermaid
+
 sequenceDiagram
 autonumber
 actor Client
@@ -244,10 +235,11 @@ else Success
   Facade-->>API: 201 Created + user
   API-->>Client: 201 Created
 end
+```
+4.3 Create Place - POST /places
 
----
+```mermaid
 
-4.3 Create Place — POST /places
 sequenceDiagram
 autonumber
 actor Client
@@ -278,10 +270,11 @@ else Success
   Facade-->>API: 201 Created + place
   API-->>Client: 201 Created
 end
+```
+4.4 Add Review - POST /places/{place_id}/reviews
 
----
+```mermaid
 
-4.4 Add Review — POST /places/{place_id}/reviews
 sequenceDiagram
 autonumber
 actor Client
@@ -322,10 +315,11 @@ else Success
   Facade-->>API: 201 Created + review
   API-->>Client: 201 Created
 end
-
----
-
+```
 4.5 Add Amenity to Place — POST /places/{place_id}/amenities/{amenity_id}
+
+```mermaid
+
 sequenceDiagram
 autonumber
 actor Client
@@ -364,7 +358,7 @@ else Success
   Facade-->>API: 204 No Content
   API-->>Client: 204 No Content
 end
-
+```
 ---
 
 5. Conclusion
