@@ -11,9 +11,6 @@ At this stage, the application provides core functionalities such as managing **
 ## Project Scope
 
 This implementation focuses on building a **scalable foundation** for the HBnB application.
-
-### Included
-
 * Core entity models:
 
   * User
