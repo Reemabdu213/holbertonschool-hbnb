@@ -224,10 +224,10 @@ class HBnBFacade:
 
         if place and hasattr(place, "reviews"):
             place.reviews = [r for r in place.reviews if getattr(r, "id", None) != review_id]
-     if user and hasattr(user, "reviews"):
-        user.reviews = [r for r in user.reviews if getattr(r, "id", None) != review_id]
-    self.review_repo.delete(review_id)
-    return True
+         if user and hasattr(user, "reviews"):
+            user.reviews = [r for r in user.reviews if getattr(r, "id", None) != review_id]
+             self.review_repo.delete(review_id)
+                return True
 
 def get_user_by_email(self, email):
     """نلقى المستخدم من إيميله - الفايدة: نتحقق إن المستخدم موجود قبل ما نعطيه توكن"""
