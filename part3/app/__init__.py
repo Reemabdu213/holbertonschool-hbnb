@@ -6,7 +6,7 @@ from flask_restx import Api
 from app.api.v1 import users, places, reviews, amenities
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager #المكتبه الي تتعامل مع JWT TOKENS عشان تفعل النظام 
-from app.api.v1.auth import apis as auth 
+from app.api.v1.auth import api as auth_ns
 
 bcrypt = Bcrypt()
 jwt = JWTManager() # ربط مع FLASK 
