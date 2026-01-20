@@ -11,7 +11,6 @@ jwt = JWTManager()
 def create_app(config_class="development"):
     """Create and configure the Flask application"""
     app = Flask(__name__)
-
      jwt.init_app(app)
 
     # Load configuration
