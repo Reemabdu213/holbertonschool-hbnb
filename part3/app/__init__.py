@@ -29,6 +29,7 @@ def create_app(config_class="development"):
     
     # Register namespaces (we'll add these later)
     api.add_namespace(users.api, path='/api/v1/users')
+    api.add_namespace(auth.api, path='/api/v1/auth') # part3 ربط صفحات تسجيل الدخول بالمسار حقها
     # api.add_namespace(places.api, path='/api/v1/places')
     # api.add_namespace(reviews.api, path='/api/v1/reviews')
     # api.add_namespace(amenities.api, path='/api/v1/amenities')
