@@ -25,13 +25,17 @@ class HBnBFacade:
         email = user_data['email'].strip().lower()
         if self.user_repo.get_by_attribute('email', email):
             raise ValueError("Email already registered")
-
+    # استخرج كلمة المرور قبل إنشاء المستخدم
+        password = user_data.pop('password', None)
         user = User(
             first_name=user_data['first_name'],
             last_name=user_data['last_name'],
             email=email,
             is_admin=user_data.get('is_admin', False)
         )
+        # إذا كانت كلمة المرور موجودة، شفّرها
+        if password:
+            user.hash_password(password)
         self.user_repo.add(user)
         return user
 
@@ -63,7 +67,17 @@ class HBnBFacade:
     def get_all_users(self):
         """Retrieve all users"""
         return self.user_repo.get_all()
-
+    
+    def get_user_by_email(self, email):
+    """نلقى المستخدم من إيميله - الفايدة: نتحقق إن المستخدم موجود قبل ما نعطيه توكن"""
+    
+    users = self.user_repo.get_all()  # نجيب كل المستخدمين اللي عندنا
+    
+    for user in users:  # نلف على كل واحد فيهم
+        if user.email == email:  # لو لقينا الإيميل اللي ندور عنه
+            return user  # نرجع بياناته
+    
+    return None  # لو ما لقيناه، نرجع None
     # =====================
     # Amenity methods
     # =====================
@@ -228,14 +242,3 @@ class HBnBFacade:
             user.reviews = [r for r in user.reviews if getattr(r, "id", None) != review_id]
             self.review_repo.delete(review_id)
             return True
-
-def get_user_by_email(self, email):
-    """نلقى المستخدم من إيميله - الفايدة: نتحقق إن المستخدم موجود قبل ما نعطيه توكن"""
-    
-    users = self.user_repo.get_all()  # نجيب كل المستخدمين اللي عندنا
-    
-    for user in users:  # نلف على كل واحد فيهم
-        if user.email == email:  # لو لقينا الإيميل اللي ندور عنه
-            return user  # نرجع بياناته
-    
-    return None  # لو ما لقيناه، نرجع None
