@@ -3,6 +3,7 @@
 User API endpoints
 """
 from flask_restx import Namespace, Resource, fields
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from app.services.facade import HBnBFacade
 
 api = Namespace('users', description='User operations')
@@ -12,7 +13,8 @@ user_model = api.model('User', {
     'first_name': fields.String(required=True, description='First name of the user'),
     'last_name': fields.String(required=True, description='Last name of the user'),
     'email': fields.String(required=True, description='Email of the user'),
-    'password': fields.String(required=True, description='Password of the user')
+    'password': fields.String(required=True, description='Password of the user'),
+    'is_admin': fields.Boolean(description='Admin status of the user', default=False)
 })
 
 
@@ -22,15 +24,8 @@ class UserList(Resource):
     def get(self):
         """Retrieve a list of all users"""
         users = facade.get_users()
-        return [
-            {
-                'id': user.id,
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-                'email': user.email
-            }
-            for user in users
-        ], 200
+        return [user.to_dict() for user in users], 200
+        
 
     @api.expect(user_model, validate=True)
     @api.response(201, 'User successfully created')
@@ -38,12 +33,20 @@ class UserList(Resource):
     @api.response(400, 'Invalid input data')
     def post(self):
         """Register a new user"""
-        try:
-            user_data = api.payload
+        user_data = api.payload
+        is_admin = user_data.get('is_admin', None)
 
-            existing_user = facade.get_user_by_email(user_data['email'])
-            if existing_user:
-              return {'error': 'Email already registered'}, 400
+        if is_admin :
+            user = get_jwt_identity()
+            if not user:
+                return {'error': 'Unauthorized'}, 401
+            is_admin = get_jwt()['is_admin']
+            print(is_admin)
+            if not is_admin:
+                return {'error': 'Forbidden'}, 403
+        existing_user = facade.get_user_by_email(user_data['email'])
+        if existing_user:
+            return {'error': 'Email already registered'}, 400
 
             new_user = facade.create_user(user_data)
             new_user.hash_password(user_data['password'])
@@ -52,6 +55,8 @@ class UserList(Resource):
                 'id': new_user.id,
                 'message': 'User successfully created'
                 }, 201
+        try:
+            new_user = facade.create_user(user_data)
         except ValueError as e:
             return {'error': str(e)}, 400
 
@@ -66,13 +71,8 @@ class UserResource(Resource):
         user = facade.get_user(user_id)
         if not user:
             return {'error': 'User not found'}, 404
-
-        return {
-            'id': user.id,
-            'first_name': user.first_name,
-            'last_name': user.last_name,
-            'email': user.email
-        }, 200
+        return user.to_dict(), 200
+        
 
     @api.expect(user_model, validate=True)
     @api.response(200, 'User successfully updated')
@@ -82,22 +82,24 @@ class UserResource(Resource):
     def put(self, user_id):
         """Update a user's information"""
         user_data = api.payload
+        admin = get_jwt()['is_admin']
+        
+        if current_user != user_id and not admin:
+            return {'error': 'Forbidden'}, 403
+        
+        user_data = api.payload
+        if not admin and user_data.get('is_admin'):
+            return {'error': 'Forbidden'}, 403
 
+        if not admin and (user_data.get('email') or user_data.get('password')):
+            return {'error': 'You cannot modify email or password.'}, 400
+        
         user = facade.get_user(user_id)
         if not user:
             return {'error': 'User not found'}, 404
-
-        existing_user = facade.get_user_by_email(user_data['email'])
-        if existing_user and existing_user.id != user_id:
-            return {'error': 'Email already registered'}, 400
-
+        
         try:
-            updated_user = facade.update_user(user_id, user_data)
-            return {
-                'id': updated_user.id,
-                'first_name': updated_user.first_name,
-                'last_name': updated_user.last_name,
-                'email': updated_user.email
-            }, 200
-        except ValueError as e:
-            return {'error': str(e)}, 400
+            facade.update_user(user_id, user_data)
+            return user.to_dict(), 200
+        except Exception as e:
+            return {'error': str(e).strip("'")}, 400
