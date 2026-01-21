@@ -15,12 +15,9 @@ jwt = JWTManager() # ربط مع FLASK
 def create_app(config_class=config.DevelopmentConfig):
     """Create and configure the Flask application"""
     app = Flask(__name__)
+    app.config.from_object(config[config_class])
     bcrypt.init_app(app)
     jwt.init_app(app) # ربط JWT مع التطبيق 
-    # Load configuration
-    from config import config
-    app.config.from_object(config[config_class])
-    
     # Initialize Flask-RESTX API
     api = Api(
         app,
