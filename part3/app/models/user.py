@@ -21,7 +21,7 @@ class User(BaseModel):
         
         self.places = []
         self.reviews = []
-    
+    @validates('first_name', 'last_name')
     def _validate_name(self, name, field_name):
         """Validate name"""
         if not name or not isinstance(name, str):
@@ -35,7 +35,7 @@ class User(BaseModel):
             raise ValueError(f"{field_name} must be 50 characters or less")
         
         return name
-    
+    @validates('email')
     def _validate_email(self, email):
         """Validate email"""
         if not email or not isinstance(email, str):
@@ -48,7 +48,19 @@ class User(BaseModel):
             raise ValueError("Invalid email format")
         
         return email
-     
+    @validates('is_admin')
+    def validate_is_admin(self, key, value):
+        if not isinstance(value, bool):
+            raise TypeError("Is Admin must be a boolean")
+        return value
+     @validates('password')
+    def validate_password(self, key, value):
+        if not isinstance(value, str):
+            raise TypeError("Password must be a string")
+        if len(value) < 8:
+            raise ValueError("Password must be at least 8 characters long")
+        return self.hash_password(value)
+        
     def hash_password(self, password):
         """Hashes the password before storing it."""
         self.password = bcrypt.generate_password_hash(password).decode('utf-8')
@@ -57,13 +69,6 @@ class User(BaseModel):
         """Verifies if the provided password matches the hashed password."""
         return bcrypt.check_password_hash(self.password, password)
     
-    def validate_password(self, key, value):
-        if not isinstance(value, str):
-            raise TypeError("Password must be a string")
-        if len(value) < 8:
-            raise ValueError("Password must be at least 8 characters long")
-        return self.hash_password(value)
-
 
     def update(self, data):
         """Update user data"""
