@@ -21,7 +21,6 @@ class User(BaseModel):
         
         self.places = []
         self.reviews = []
-    @validates('first_name', 'last_name')
     def _validate_name(self, name, field_name):
         """Validate name"""
         if not name or not isinstance(name, str):
@@ -35,7 +34,6 @@ class User(BaseModel):
             raise ValueError(f"{field_name} must be 50 characters or less")
         
         return name
-    @validates('email')
     def _validate_email(self, email):
         """Validate email"""
         if not email or not isinstance(email, str):
@@ -48,12 +46,10 @@ class User(BaseModel):
             raise ValueError("Invalid email format")
         
         return email
-    @validates('is_admin')
     def validate_is_admin(self, key, value):
         if not isinstance(value, bool):
             raise TypeError("Is Admin must be a boolean")
         return value
-    @validates('password')
     def validate_password(self, key, value):
         if not isinstance(value, str):
             raise TypeError("Password must be a string")
