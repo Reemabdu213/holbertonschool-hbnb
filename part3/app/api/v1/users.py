@@ -9,6 +9,7 @@ from app.services.facade import HBnBFacade
 api = Namespace('users', description='User operations')
 facade = HBnBFacade()
 
+# User model for input validation
 user_model = api.model('User', {
     'first_name': fields.String(required=True, description='First name of the user'),
     'last_name': fields.String(required=True, description='Last name of the user'),
@@ -22,9 +23,9 @@ class UserList(Resource):
     @api.response(200, 'List of users retrieved successfully')
     def get(self):
         """Retrieve a list of all users"""
-        users = facade.get_users()
+        users = facade.get_all_users()
         return [user.to_dict() for user in users], 200
-        
+    
     @api.expect(user_model, validate=True)
     @api.response(201, 'User successfully created')
     @api.response(400, 'Email already registered')
@@ -33,13 +34,12 @@ class UserList(Resource):
         """Register a new user"""
         user_data = api.payload
         
-        existing_user = facade.get_user_by_email(user_data['email'])
-        if existing_user:
-            return {'error': 'Email already registered'}, 400
-        
         try:
+            # facade.create_user will handle:
+            # 1. Email validation
+            # 2. Duplicate check
+            # 3. Password hashing
             new_user = facade.create_user(user_data)
-            new_user.hash_password(user_data['password'])
             
             return {
                 'id': new_user.id,
@@ -48,6 +48,7 @@ class UserList(Resource):
         except ValueError as e:
             return {'error': str(e)}, 400
 
+
 @api.route('/<user_id>')
 @api.param('user_id', 'The user identifier')
 class UserResource(Resource):
@@ -55,7 +56,7 @@ class UserResource(Resource):
     @api.response(404, 'User not found')
     def get(self, user_id):
         """Get user details by ID"""
-        user = facade.get_user(user_id)
+        user = facade.get_user_by_id(user_id)
         if not user:
             return {'error': 'User not found'}, 404
         return user.to_dict(), 200
