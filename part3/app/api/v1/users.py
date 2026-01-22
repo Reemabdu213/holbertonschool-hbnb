@@ -17,7 +17,6 @@ user_model = api.model('User', {
     'is_admin': fields.Boolean(description='Admin status of the user', default=False)
 })
 
-
 @api.route('/')
 class UserList(Resource):
     @api.response(200, 'List of users retrieved successfully')
@@ -26,7 +25,6 @@ class UserList(Resource):
         users = facade.get_users()
         return [user.to_dict() for user in users], 200
         
-
     @api.expect(user_model, validate=True)
     @api.response(201, 'User successfully created')
     @api.response(400, 'Email already registered')
@@ -34,32 +32,21 @@ class UserList(Resource):
     def post(self):
         """Register a new user"""
         user_data = api.payload
-        is_admin = user_data.get('is_admin', None)
-
-        if is_admin :
-            user = get_jwt_identity()
-            if not user:
-                return {'error': 'Unauthorized'}, 401
-            is_admin = get_jwt()['is_admin']
-            print(is_admin)
-            if not is_admin:
-                return {'error': 'Forbidden'}, 403
+        
         existing_user = facade.get_user_by_email(user_data['email'])
         if existing_user:
             return {'error': 'Email already registered'}, 400
         
-        # ← الكود هنا خارج الـ if!
         try:
             new_user = facade.create_user(user_data)
-            new_user.hash_password(user_data['password'])  # ← تشفير الباسورد!
+            new_user.hash_password(user_data['password'])
             
-            return {  # ← return موجود!
+            return {
                 'id': new_user.id,
                 'message': 'User successfully created'
             }, 201
         except ValueError as e:
             return {'error': str(e)}, 400
-
 
 @api.route('/<user_id>')
 @api.param('user_id', 'The user identifier')
@@ -72,34 +59,3 @@ class UserResource(Resource):
         if not user:
             return {'error': 'User not found'}, 404
         return user.to_dict(), 200
-        
-
-    @api.expect(user_model, validate=True)
-    @api.response(200, 'User successfully updated')
-    @api.response(404, 'User not found')
-    @api.response(400, 'Email already registered')
-    @api.response(400, 'Invalid input data')
-    def put(self, user_id):
-        """Update a user's information"""
-        user_data = api.payload
-        admin = get_jwt()['is_admin']
-        
-        if current_user != user_id and not admin:
-            return {'error': 'Forbidden'}, 403
-        
-        user_data = api.payload
-        if not admin and user_data.get('is_admin'):
-            return {'error': 'Forbidden'}, 403
-
-        if not admin and (user_data.get('email') or user_data.get('password')):
-            return {'error': 'You cannot modify email or password.'}, 400
-        
-        user = facade.get_user(user_id)
-        if not user:
-            return {'error': 'User not found'}, 404
-        
-        try:
-            facade.update_user(user_id, user_data)
-            return user.to_dict(), 200
-        except Exception as e:
-            return {'error': str(e).strip("'")}, 400
