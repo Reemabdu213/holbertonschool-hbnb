@@ -1,5 +1,5 @@
 import uuid
-from app import bcrypt
+from app.extensions import bcrypt
 
 class User:
     def __init__(self, first_name, last_name, email, password=None, is_admin=False):
