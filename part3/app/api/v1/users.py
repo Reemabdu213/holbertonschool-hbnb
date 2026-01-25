@@ -3,7 +3,7 @@
 User API endpoints
 """
 from flask_restx import Namespace, Resource, fields
-from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.services.facade import facade
 
 api = Namespace('users', description='User operations')
@@ -14,6 +14,12 @@ user_model = api.model('User', {
     'last_name': fields.String(required=True, description='Last name'),
     'email': fields.String(required=True, description='Email address'),
     'password': fields.String(required=True, description='Password')
+})
+
+# User update model (without email and password)
+user_update_model = api.model('UserUpdate', {
+    'first_name': fields.String(description='First name'),
+    'last_name': fields.String(description='Last name')
 })
 
 @api.route('/')
@@ -52,3 +58,33 @@ class UserResource(Resource):
         if not user:
             return {'error': 'User not found'}, 404
         return user.to_dict(), 200
+    
+    @api.expect(user_update_model)
+    @api.response(200, 'User updated successfully')
+    @api.response(404, 'User not found')
+    @api.response(403, 'Unauthorized action')
+    @api.response(400, 'Invalid input')
+    @jwt_required()
+    def put(self, user_id):
+        """Update user information (requires authentication)"""
+        current_user = get_jwt_identity()
+        
+        # Check if user is trying to modify their own data
+        if user_id != current_user:
+            return {'error': 'Unauthorized action'}, 403
+        
+        user_data = api.payload
+        
+        # Check if trying to modify email or password
+        if 'email' in user_data or 'password' in user_data:
+            return {'error': 'You cannot modify email or password'}, 400
+        
+        user = facade.get_user_by_id(user_id)
+        if not user:
+            return {'error': 'User not found'}, 404
+        
+        try:
+            facade.update_user(user_id, user_data)
+            return {'message': 'User updated successfully'}, 200
+        except Exception as e:
+            return {'error': str(e)}, 400
