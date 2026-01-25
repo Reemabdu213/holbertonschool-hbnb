@@ -1,52 +1,84 @@
-from flask_restx import Namespace, Resource, fields
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt, get_jwt_identity
-from app.services.facade import HBnBFacade
+import pytest
+from app import create_app
+from app.models.user import User
 
-api = Namespace('auth', description='Authentication operations')
-facade = HBnBFacade()
+@pytest.fixture
+def client():
+    """إنشاء Flask test client"""
+    app = create_app()
+    app.config['TESTING'] = True
+    app.config['JWT_SECRET_KEY'] = 'test-secret-key'
+    
+    with app.test_client() as client:
+        yield client
 
-# Model for input validation
-login_model = api.model('Login', {
-    'email': fields.String(required=True, description='User email'),
-    'password': fields.String(required=True, description='User password')
-})
+@pytest.fixture
+def sample_user(client):
+    """إنشاء مستخدم للاختبار"""
+    user_data = {
+        "first_name": "John",
+        "last_name": "Doe",
+        "email": "john.doe@example.com",
+        "password": "password123"
+    }
+    # أضف المستخدم للنظام
+    response = client.post('/api/v1/users/', json=user_data)
+    return user_data
 
-@api.route('/login')
-class Login(Resource):
-    @api.expect(login_model)
-    def post(self):
-        """Authenticate user and return a JWT token"""
-        credentials = api.payload
-        
-        # Step 1: Retrieve the user based on the provided email
-        user = facade.get_user_by_email(credentials['email'])
-        
-        # Step 2: Check if the user exists and the password is correct
-        if not user or not user.verify_password(credentials['password']):
-            return {'error': 'Invalid credentials'}, 401
+def test_login_success(client, sample_user):
+    """اختبار تسجيل الدخول الناجح"""
+    response = client.post('/api/v1/auth/login', json={
+        'email': sample_user['email'],
+        'password': sample_user['password']
+    })
+    
+    assert response.status_code == 200
+    assert 'access_token' in response.json
 
-        # Step 3: Create a JWT token with the user's id and is_admin flag
-        access_token = create_access_token(
-            identity=str(user.id),
-            additional_claims={"is_admin": user.is_admin}
-        )
-        
-        # Step 4: Return the JWT token to the client
-        return {'access_token': access_token}, 200
+def test_login_invalid_credentials(client):
+    """اختبار تسجيل دخول بمعلومات خاطئة"""
+    response = client.post('/api/v1/auth/login', json={
+        'email': 'wrong@example.com',
+        'password': 'wrongpassword'
+    })
+    
+    assert response.status_code == 401
+    assert 'error' in response.json
 
+def test_protected_endpoint_without_token(client):
+    """اختبار الوصول لـ endpoint محمي بدون token"""
+    response = client.get('/api/v1/protected')
+    
+    assert response.status_code == 401
 
-@api.route('/protected')
-class ProtectedResource(Resource):
-    @jwt_required()
-    def get(self):
-        """A protected endpoint that requires a valid JWT token"""
-        current_user_id = get_jwt_identity()
-        
-        # Get additional claims
-        claims = get_jwt()
-        is_admin = claims.get('is_admin', False)
-        
-        return {
-            'message': f'Hello, user {current_user_id}',
-            'is_admin': is_admin
-        }, 200
+def test_protected_endpoint_with_token(client, sample_user):
+    """اختبار الوصول لـ endpoint محمي مع token صحيح"""
+    # الحصول على token
+    login_response = client.post('/api/v1/auth/login', json={
+        'email': sample_user['email'],
+        'password': sample_user['password']
+    })
+    
+    token = login_response.json['access_token']
+    
+    # استخدام الـ token
+    response = client.get('/api/v1/protected', 
+                          headers={'Authorization': f'Bearer {token}'})
+    
+    assert response.status_code == 200
+    assert 'message' in response.json
+
+def test_token_contains_claims(client, sample_user):
+    """اختبار أن الـ token يحتوي على الـ claims الصحيحة"""
+    from flask_jwt_extended import decode_token
+    
+    login_response = client.post('/api/v1/auth/login', json={
+        'email': sample_user['email'],
+        'password': sample_user['password']
+    })
+    
+    token = login_response.json['access_token']
+    decoded = decode_token(token)
+    
+    assert 'sub' in decoded  # identity
+    assert 'is_admin' in decoded
