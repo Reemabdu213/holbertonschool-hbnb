@@ -39,7 +39,8 @@ class UserList(Resource):
     
     @api.expect(user_model)
     @api.response(201, 'User successfully created')
-    @api.response(400, 'Invalid input')
+    #@api.response(400, 'Invalid input')
+    @api.response(400, 'Email already registered')
     @api.response(403, 'Admin privileges required')
     @jwt_required()  # تاسك 4: يتطلب تسجيل دخول
     def post(self):
@@ -50,7 +51,9 @@ class UserList(Resource):
             return {'error': 'Admin privileges required'}, 403  # تاسك 4: فقط Admin ينشئ مستخدمين
         
         user_data = api.payload
-        
+        # Check if email is already in use
+        if facade.get_user_by_email(email):
+            return {'error': 'Email already registered'}, 400
         try:
             new_user = facade.create_user(user_data)
             
@@ -73,7 +76,8 @@ class UserResource(Resource):
             return {'error': 'User not found'}, 404
         return user.to_dict(), 200
     
-    @api.expect(user_update_model, admin_user_update_model)
+    #@api.expect(user_update_model, admin_user_update_model)
+    @api.expect(admin_user_update_model) # نستخدم موديل الأدمن لأنه الأشمل للتوثيق
     @api.response(200, 'User updated successfully')
     @api.response(404, 'User not found')
     @api.response(403, 'Unauthorized action')
@@ -85,10 +89,14 @@ class UserResource(Resource):
         current_user = get_jwt()  # تاسك 4: جلب كامل معلومات JWT
         is_admin = current_user.get('is_admin', False)  # تاسك 4: التحقق من Admin
         
+
+        user = facade.get_user_by_id(user_id)
+        if not user:
+            return {'error': 'User not found'}, 404
         # تاسك 4: Admin يقدر يعدل أي مستخدم، User عادي يعدل نفسه فقط
         if not is_admin and user_id != current_user_id:
             return {'error': 'Unauthorized action'}, 403  # تاسك 3: خطأ 403 إذا حاول تعديل غيره
-        
+            
         user_data = api.payload
         
         # تاسك 4: Admin يقدر يعدل email و password
@@ -102,10 +110,6 @@ class UserResource(Resource):
                 existing_user = facade.get_user_by_email(user_data['email'])
                 if existing_user and existing_user.id != user_id:
                     return {'error': 'Email already in use'}, 400
-        
-        user = facade.get_user_by_id(user_id)
-        if not user:
-            return {'error': 'User not found'}, 404
         
         try:
             # تاسك 4: Admin يقدر يعدل password أيضاً
