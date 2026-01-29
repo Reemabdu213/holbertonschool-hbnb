@@ -3,7 +3,7 @@
 Place Model
 """
 from app.models.base_model import BaseModel
-
+from app import db
 
 class Place(BaseModel):
     """Place class"""
@@ -21,9 +21,8 @@ class Place(BaseModel):
         
       #  self.reviews = []
       #  self.amenities = []
-    #ُTask 7
+    #Task 7
     __tablename__ = 'places'
-    id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(500))
     price = db.Column(db.Float, nullable=False)
