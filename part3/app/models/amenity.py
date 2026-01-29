@@ -3,7 +3,8 @@
 Amenity Model
 """
 from app.models.base_model import BaseModel
-
+from app import db
+from sqlalchemy.orm import validates
 
 class Amenity(BaseModel):
     """Amenity class"""
@@ -15,7 +16,8 @@ class Amenity(BaseModel):
     #Task 7
     __tablename__ = 'amenities'
 
-    _name = db.Column(db.String(128), nullable=False, unique=True)
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False, unique=True)
 
     def _validate_name(self, name):
         """Validate amenity name"""
