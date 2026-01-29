@@ -4,7 +4,22 @@ Place Model
 """
 from app.models.base_model import BaseModel
 from app import db
+"""Create an association table to manage the many-to-many relationship between Place and Amenity."""
+place_amenity = db.Table(
+    'place_amenity',
+    db.Column(
+        'place_id',
+        db.String(36),
+        db.ForeignKey('places.id'),
 
+    ),
+    db.Column(
+        'amenity_id',
+        db.String(36),
+        db.ForeignKey('amenities.id'),
+
+    )
+)
 class Place(BaseModel):
     """Place class"""
     
@@ -28,6 +43,21 @@ class Place(BaseModel):
     price = db.Column(db.Float, nullable=False)
     latitude = db.Column(db.Float)
     longitude = db.Column(db.Float)
+    # ForeignKey
+    owner_id = db.Column(db.String(36),
+                          db.ForeignKey('users.id'),
+                          nullable=False)
+    # relationship
+    owner = db.relationship('User', back_populates='places')
+    reviews = db.relationship('Review',
+                              back_populates='place',
+                              cascade='all, delete-orphan')
+    amenities = db.relationship(
+        'Amenity',
+        secondary=place_amenity,
+        back_populates='places',
+        cascade='all, delete'
+    )
     
     def _validate_title(self, title):
         """Validate title"""
