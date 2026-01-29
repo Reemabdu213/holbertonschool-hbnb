@@ -17,7 +17,12 @@ class Amenity(BaseModel):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False, unique=True)
-
+    # relationship
+    places = db.relationship(
+        'Place',
+        secondary=place_amenity,
+        back_populates='amenities'
+    )
     def _validate_name(self, name):
         """Validate amenity name"""
         if not name or not isinstance(name, str):
