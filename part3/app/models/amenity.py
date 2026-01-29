@@ -4,6 +4,7 @@ Amenity Model
 """
 from app.models.base_model import BaseModel
 from app import db
+from app.models.place import place_amenity
 
 class Amenity(BaseModel):
     """Amenity class"""
