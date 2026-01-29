@@ -8,15 +8,19 @@ from app.models.base_model import BaseModel
 class Review(BaseModel):
     """Review class"""
     
-    def __init__(self, text, rating, place, user):
-        """Initialize Review"""
-        super().__init__()
+    #def __init__(self, text, rating, place, user):
+     #   """Initialize Review"""
+      #  super().__init__()
         
-        self.text = self._validate_text(text)
-        self.rating = self._validate_rating(rating)
-        self.place = place
-        self.user = user
+      #  self.text = self._validate_text(text)
+      # self.rating = self._validate_rating(rating)
+      #  self.place = place
+       # self.user = user
+    # Task 7
+    __tablename__ = 'reviews'
     
+    _text = db.Column(db.Text, nullable=False)
+    _rating = db.Column(db.Integer, nullable=False)
     def _validate_text(self, text):
         """Validate review text"""
         if not text or not isinstance(text, str):
