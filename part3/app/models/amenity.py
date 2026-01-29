@@ -4,7 +4,6 @@ Amenity Model
 """
 from app.models.base_model import BaseModel
 from app import db
-from sqlalchemy.orm import validates
 
 class Amenity(BaseModel):
     """Amenity class"""
