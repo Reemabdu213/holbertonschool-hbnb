@@ -14,8 +14,8 @@ class User(BaseModel):
     places = db.relationship('Place', back_populates='owner', cascade='all, delete-orphan')
     reviews = db.relationship('Review', back_populates='user', cascade='all, delete-orphan')
     
-   """
-   def __init__(self, first_name, last_name, email, password=None, is_admin=False):
+    """
+    def __init__(self, first_name, last_name, email, password=None, is_admin=False):
         self.id = str(uuid.uuid4())
         self.first_name = first_name
         self.last_name = last_name
