@@ -4,6 +4,7 @@ This will be replaced with a database in Part 3
 """
 from abc import ABC, abstractmethod
 from app import db
+from app.persistence.repository import SQLAlchemyRepository # task 6
 
 class Repository(ABC):
     @abstractmethod
@@ -106,3 +107,10 @@ class SQLAlchemyRepository(Repository):
 
     def get_by_attribute(self, attr_name, attr_value):
         return self.model.query.filter_by(**{attr_name: attr_value}).first()
+
+class UserRepository(SQLAlchemyRepository):
+    def __init__(self):
+        super().__init__(User)
+
+    def get_user_by_email(self, email):
+        return self.model.query.filter_by(email=email).first()
