@@ -5,10 +5,10 @@ from .base_model import BaseModel  # Import BaseModel from its module
 class User(BaseModel):
     __tablename__ = 'users'
     #### Task 6
-    first_name = db.Column(db.String(50), nullable=False)
-    last_name = db.Column(db.String(50), nullable=False)
-    email = db.Column(db.String(120), nullable=False, unique=True)
-    password = db.Column(db.String(128), nullable=False)
+    first_name = db.Column(db.String(255), nullable=False)
+    last_name = db.Column(db.String(255), nullable=False)
+    email = db.Column(db.String(255), nullable=False, unique=True)
+    password = db.Column(db.String(255), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
     # Relationships
     places = db.relationship('Place', back_populates='owner', cascade='all, delete-orphan')
