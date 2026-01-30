@@ -38,7 +38,7 @@ class Place(BaseModel):
       #  self.amenities = []
     #Task 7
     __tablename__ = 'places'
-    title = db.Column(db.String(100), nullable=False)
+    title = db.Column(db.String(255), nullable=False)
     description = db.Column(db.String(500))
     price = db.Column(db.Float, nullable=False)
     latitude = db.Column(db.Float)
