@@ -115,7 +115,7 @@ class UserResource(Resource):
             # تاسك 4: Admin يقدر يعدل password أيضاً
             if is_admin and 'password' in user_data:
                 user.hash_password(user_data['password'])
-            
+        
             facade.update_user(user_id, user_data)
             return {'message': 'User updated successfully'}, 200
         except Exception as e:
