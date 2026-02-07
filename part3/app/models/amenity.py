@@ -14,11 +14,9 @@ class Amenity(BaseModel):
    #    super().__init__()
    #     self.name = self._validate_name(name)
     #Task 7
-    __tablename__ = 'amenities'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255), nullable=False, unique=True)
-    # relationship
+   __tablename__ = 'amenities'
+   # BaseModel يوفر id تلقائياً كـ String UUID
+   name = db.Column(db.String(255), nullable=False, unique=True)    # relationship
     places = db.relationship(
         'Place',
         secondary=place_amenity,
