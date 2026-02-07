@@ -23,7 +23,6 @@ class Review(BaseModel):
     
     text = db.Column(db.Text, nullable=False)
     rating = db.Column(db.Integer, nullable=False)
-    # relationship
     # ✅ Foreign Keys
     user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
     place_id = db.Column(db.String(36), db.ForeignKey('places.id'), nullable=False)
