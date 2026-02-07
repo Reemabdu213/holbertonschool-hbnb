@@ -52,7 +52,7 @@ class UserList(Resource):
         
         user_data = api.payload
         # Check if email is already in use
-        if facade.get_user_by_email(email):
+        if facade.get_user_by_email(user_data['email']):
             return {'error': 'Email already registered'}, 400
         try:
             new_user = facade.create_user(user_data)
