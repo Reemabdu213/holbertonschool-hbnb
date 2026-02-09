@@ -69,7 +69,7 @@ if (document.getElementById('places-list')) {
     checkAuthentication();
     
     // Fetch and display places
-    async function fetchPlaces(country = '') {
+   /* async function fetchPlaces(country = '') { 
         try {
             const response = await fetch(`${API_URL}/places/`);
             
@@ -92,8 +92,32 @@ if (document.getElementById('places-list')) {
             document.getElementById('places-list').innerHTML = 
                 '<p>Failed to load places. Please try again later.</p>';
         }
+    } */
+    let allPlaces = []; 
+    async function fetchPlaces(token) {
+        try {
+            const response = await fetch(`${API_URL}/places/`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch places');
+            }
+
+            const places = await response.json();
+            allPlaces = await response.json();
+            displayPlaces(places);
+            populateCountryFilter(places);
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('places-list').innerHTML =
+                '<p>Failed to load places. Please try again later.</p>';
+        }
     }
-    
+
     // Display places as cards
     function displayPlaces(places) {
         const container = document.getElementById('places-list');
@@ -107,6 +131,7 @@ if (document.getElementById('places-list')) {
         places.forEach(place => {
             const card = document.createElement('div');
             card.className = 'place-card';
+            // images/placeholder.jpg not exist yet
             card.innerHTML = `
                 <img src="images/placeholder.jpg" alt="${place.title}" onerror="this.src='images/icon.png'">
                 <h3>${place.title}</h3>
@@ -143,7 +168,19 @@ if (document.getElementById('places-list')) {
     window.viewPlace = function(placeId) {
         window.location.href = `place.html?id=${placeId}`;
     };
-    
+    // Implement Price Filter
+    document.getElementById('price-filter').addEventListener('change', (event) => {
+    const selectedPrice = event.target.value;
+
+    let filteredPlaces = allPlaces;
+    if (selectedPrice !== 'all') {
+        const maxPrice = parseInt(selectedPrice);
+        filteredPlaces = allPlaces.filter(place => place.price <= maxPrice);
+    }
+
+    displayPlaces(filteredPlaces);
+});
+
     // Load places on page load
     fetchPlaces();
 }
