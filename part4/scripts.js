@@ -16,17 +16,11 @@ function checkAuth() {
 // Login function
 async function login(event) {
     event.preventDefault();
-    console.log('Login function called!');
     
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
     
-    console.log('Email:', email);
-    console.log('Password:', password);
-    
     try {
-        console.log('Sending request to:', `${API_BASE_URL}/auth/login`);
-        
         const response = await fetch(`${API_BASE_URL}/auth/login`, {
             method: 'POST',
             headers: {
@@ -35,16 +29,12 @@ async function login(event) {
             body: JSON.stringify({ email, password })
         });
         
-        console.log('Response status:', response.status);
-        
         if (response.ok) {
             const data = await response.json();
-            console.log('Login successful!', data);
             localStorage.setItem('token', data.access_token);
             window.location.href = 'places.html';
         } else {
             const error = await response.json();
-            console.error('Login failed:', error);
             alert(error.error || 'Login failed');
         }
     } catch (error) {
@@ -155,6 +145,7 @@ function displayPlaceDetails() {
     document.getElementById('place-price').textContent = `$${place.price_per_night} per night`;
     document.getElementById('place-location').textContent = `${place.city}, ${place.country}`;
     
+    // Display amenities
     const amenitiesList = document.getElementById('amenities-list');
     amenitiesList.innerHTML = '';
     
@@ -168,6 +159,7 @@ function displayPlaceDetails() {
         amenitiesList.innerHTML = '<li>No amenities listed</li>';
     }
     
+    // Display reviews
     displayReviews(place.reviews || []);
 }
 
