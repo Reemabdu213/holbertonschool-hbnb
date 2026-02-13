@@ -306,7 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Show Add Review form only if authenticated
     const token = getCookie('token');
-    const addReviewSection = document.getElementById('add-review');
+    const addReviewSection = document.getElementById('add-review-btn');
     if (addReviewSection) {
         addReviewSection.style.display = token ? 'block' : 'none';
     }
