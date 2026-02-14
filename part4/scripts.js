@@ -1,19 +1,8 @@
 // API Configuration
 const API_BASE_URL = 'http://127.0.0.1:5000/api/v1';
 
-// ==================== Image Mapping ====================
-const placeImages = {
-    'cozy apartment': 'images/placeholder.jpg',
-    'luxury beach villa': 'images/villa.jpg',
-    'mountain cabin retreat': 'images/cabin.jpg'
-};
-
-function getPlaceImage(title) {
-    const key = title.toLowerCase();
-    return placeImages[key] || 'images/placeholder.jpg';
-}
-
 // ==================== Cookie Helper Functions ====================
+// Check for the JWT token in cookies and redirect unauthenticated users.
 function checkAuthentication() {
       const token = getCookie('token');
       if (!token) {
@@ -43,6 +32,19 @@ function checkAuth() {
     const token = getCookie('token');
     const loginLink = document.getElementById('login-link');
 
+    /*if (loginLink) {
+        if (token) {
+            loginLink.textContent = 'Logout';
+            loginLink.href = '#';
+            loginLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                logout();
+            });
+        } else {
+            loginLink.textContent = 'Login';
+            loginLink.href = 'login.html';
+        }
+    }*/
     if (!loginLink) return;
 
     if (!token) {
@@ -128,6 +130,18 @@ async function fetchPlaces(country = '') {
     }
 }
 
+// Image mapping for places
+const placeImages = {
+    'cozy apartment': 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&h=400&fit=crop',
+    'luxury beach villa': 'https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=600&h=400&fit=crop',
+    'mountain cabin retreat': 'https://images.unsplash.com/photo-1449158743715-0a90ebb6d2d8?w=600&h=400&fit=crop'
+};
+
+function getPlaceImage(title) {
+    const key = title.toLowerCase();
+    return placeImages[key] || 'images/placeholder.jpg';
+}
+
 function displayPlaces(places) {
     const container = document.getElementById('places-list');
     if (!container) return;
@@ -176,7 +190,6 @@ function filterByPrice() {
         }
     });
 }
-
 // ==================== Place Details ====================
 
 async function fetchPlaceDetails(placeId) {
@@ -210,6 +223,7 @@ function displayPlaceDetails(place) {
     const priceEl = document.getElementById('place-price');
     const locationEl = document.getElementById('place-location');
 
+    // بعض الـ APIs تستخدم name بدل title
     const placeTitle = place.title || place.name || 'Place';
 
     if (titleEl) titleEl.textContent = placeTitle;
@@ -232,6 +246,7 @@ function displayPlaceDetails(place) {
         if (place.amenities && place.amenities.length > 0) {
             place.amenities.forEach(amenity => {
                 const li = document.createElement('li');
+                // amenity ممكن يكون string أو object
                 li.textContent = (typeof amenity === 'string') ? amenity : (amenity.name || 'Amenity');
                 amenitiesList.appendChild(li);
             });
@@ -292,6 +307,7 @@ async function addReview(event) {
 
         if (response.ok) {
             alert('Review added successfully!');
+           // window.location.href = `place.html?id=${placeId}`;
             document.getElementById('review-form').reset();
         } else if (response.status === 401) {
             logout();
@@ -333,28 +349,28 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchPlaces();
     }
 
-    if (currentPage.includes('places.html')) {
-        const urlParams = new URLSearchParams(window.location.search);
-        const placeId = urlParams.get('id');
+  if (currentPage.includes('places.html')) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const placeId = urlParams.get('id');
 
-        // Show Add Review button only if authenticated
-        const token = getCookie('token');
-        const addReviewBtn = document.getElementById('add-review-btn');
-        if (addReviewBtn) {
-            if (token && placeId) {
-                addReviewBtn.style.display = 'inline-block';
-                addReviewBtn.href = `add_review.html?id=${placeId}`;
-            } else {
-                addReviewBtn.style.display = 'none';
-            }
-        }
-
-        if (placeId) {
-            fetchPlaceDetails(placeId);
+    // Show Add Review button only if authenticated
+    const token = getCookie('token');
+    const addReviewBtn = document.getElementById('add-review-btn');
+    if (addReviewBtn) {
+        if (token && placeId) {
+            addReviewBtn.style.display = 'inline-block';
+            addReviewBtn.href = `add_review.html?id=${placeId}`;
         } else {
-            document.getElementById('place-title').textContent = 'Place not found';
+            addReviewBtn.style.display = 'none';
         }
     }
+
+    if (placeId) {
+        fetchPlaceDetails(placeId);
+    } else {
+        document.getElementById('place-title').textContent = 'Place not found';
+    }
+}
 
     const countryFilter = document.getElementById('country-filter');
     if (countryFilter) {

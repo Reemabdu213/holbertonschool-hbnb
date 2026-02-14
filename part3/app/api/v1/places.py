@@ -1,5 +1,5 @@
 from flask_restx import Namespace, Resource, fields
-from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt  # تاسك 4: إضافة get_jwt
 from app.services import facade
 
 api = Namespace('places', description='Place operations')
@@ -37,13 +37,13 @@ class PlaceList(Resource):
     @api.expect(place_model)
     @api.response(201, 'Place successfully created')
     @api.response(400, 'Invalid input data')
-    @jwt_required()
+    @jwt_required()  # تاسك 3: يتطلب تسجيل دخول لإنشاء مكان
     def post(self):
         """Create a new place"""
-        current_user = get_jwt_identity()
+        current_user = get_jwt_identity()  # تاسك 3: جلب معرف المستخدم من JWT
         place_data = api.payload
         
-        place_data['owner_id'] = current_user
+        place_data['owner_id'] = current_user  # تاسك 3: تعيين المالك تلقائياً لمنع الانتحال
         
         try:
             new_place = facade.create_place(place_data)
@@ -52,7 +52,7 @@ class PlaceList(Resource):
             return {'error': str(e)}, 400
 
     @api.response(200, 'List of places retrieved successfully')
-    def get(self):
+    def get(self):  # تاسك 3: endpoint عام - لا يحتاج تسجيل دخول
         """Get all places (public endpoint)"""
         places = facade.get_all_places()
         return [place.to_dict() for place in places], 200
@@ -61,7 +61,7 @@ class PlaceList(Resource):
 class PlaceResource(Resource):
     @api.response(200, 'Place details retrieved successfully')
     @api.response(404, 'Place not found')
-    def get(self, place_id):
+    def get(self, place_id):  # تاسك 3: endpoint عام - لا يحتاج تسجيل دخول
         """Get place details (public endpoint)"""
         place = facade.get_place(place_id)
         if not place:
@@ -76,18 +76,20 @@ class PlaceResource(Resource):
     @api.response(404, 'Place not found')
     @api.response(403, 'Unauthorized action')
     @api.response(400, 'Invalid input data')
-    @jwt_required()
+    @jwt_required()  # تاسك 3: يتطلب تسجيل دخول لتعديل المكان
     def put(self, place_id):
         """Update a place"""
-        current_user_id = get_jwt_identity()
-        current_user = get_jwt()
-        is_admin = current_user.get('is_admin', False)
+        current_user_id = get_jwt_identity()  # تاسك 3: جلب المستخدم الحالي
+        current_user = get_jwt()  # تاسك 4: جلب كامل معلومات JWT
+        is_admin = current_user.get('is_admin', False)  # تاسك 4: التحقق من Admin
         
         place = facade.get_place(place_id)
         
         if not place:
             return {'error': 'Place not found'}, 404
         
+        # تاسك 4: التحقق من owner_id بطريقة آمنة
+        # التحقق إذا كان owner هو object أو string
         if hasattr(place, 'owner_id'):
             owner_id = place.owner_id
         elif hasattr(place.owner, 'id'):
@@ -95,8 +97,9 @@ class PlaceResource(Resource):
         else:
             owner_id = str(place.owner)
         
+        # تاسك 4: Admin يتجاوز التحقق من الملكية، User عادي لازم يكون المالك
         if not is_admin and owner_id != current_user_id:
-            return {'error': 'Unauthorized action'}, 403
+            return {'error': 'Unauthorized action'}, 403  # تاسك 3: خطأ 403 إذا ما كان المالك
         
         place_data = api.payload
         try:
@@ -126,11 +129,7 @@ class PlaceAmenities(Resource):
                 return {'error': 'Invalid input data'}, 400
         
         for amenity in amenities_data:
-            a = facade.get_amenity(amenity['id'])
-            if a:
-                place.add_amenity(a)
-        from app import db
-        db.session.commit()
+            place.add_amenity(amenity)
         return {'message': 'Amenities added successfully'}, 200
 
 @api.route('/<place_id>/reviews')

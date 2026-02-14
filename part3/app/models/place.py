@@ -153,7 +153,7 @@ class Place(BaseModel):
             'latitude': self.latitude,
             'longitude': self.longitude,
             'owner_id': self.owner.id,
-            'amenities': [{'id': amenity.id, 'name': amenity.name} for amenity in self.amenities]
+            'amenities': [amenity.id for amenity in self.amenities]
         })
         return data
     
