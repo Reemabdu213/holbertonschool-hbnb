@@ -16,7 +16,7 @@
 
     <!-- Navigation -->
     <nav>
-        <a href="index.html">← Back to Places</a>
+        <a href="index.html">&larr; Back to Places</a>
         <a href="login.html">Login</a>
     </nav>
 
@@ -24,18 +24,26 @@
     <main>
         <!-- Place Details -->
         <section id="place-details" class="place-details">
-            <!-- Details will be loaded here by JavaScript -->
+            <div class="place-info">
+                <h1 id="place-title">Loading...</h1>
+                <img id="place-image" src="images/placeholder.jpg" alt="Place Image">
+                <p id="place-description"></p>
+                <p id="place-price" class="price"></p>
+                <p id="place-location" class="location"></p>
+            </div>
+
+            <!-- Amenities -->
+            <div class="amenities">
+                <h3>Amenities</h3>
+                <ul id="amenities-list"></ul>
+            </div>
         </section>
 
         <!-- Reviews Section -->
         <section class="reviews-section">
             <h2>Reviews</h2>
-            <div id="reviews-list">
-                <!-- Reviews will be loaded here by JavaScript -->
-            </div>
-            
-            <!-- Add Review Button (only for logged-in users) -->
-            <button id="add-review-btn" class="details-button" style="display: none;">Add Review</button>
+            <div id="reviews-list"></div>
+            <a id="add-review-btn" class="details-button" style="display: none;">Add Review</a>
         </section>
     </main>
 
