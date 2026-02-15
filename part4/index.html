@@ -13,23 +13,29 @@
         <img src="images/logo.png" alt="HBnB Logo" class="logo">
         <a href="login.html" class="login-button" id="login-link">Login</a>
     </header>
-
     <!-- Navigation -->
     <nav>
         <a href="index.html">Home</a>
         <a href="login.html">Login</a>
     </nav>
-
     <!-- Main Content -->
     <main>
         <h1>Explore Our Places</h1>
         
         <!-- Filters -->
         <section class="filters">
-            <!-- Country Filter -->
-            <label for="country-filter">Filter by Country:</label>
+            <!-- City Filter -->
+            <label for="country-filter">Filter by City:</label>
             <select id="country-filter">
-                <option value="">All Countries</option>
+                <option value="">All Cities</option>
+                <option value="Riyadh">Riyadh</option>
+                <option value="Jeddah">Jeddah</option>
+                <option value="Dammam">Dammam</option>
+                <option value="Dubai">Dubai</option>
+                <option value="Abu Dhabi">Abu Dhabi</option>
+                <option value="Kuwait City">Kuwait City</option>
+                <option value="Manama">Manama</option>
+                <option value="Cairo">Cairo</option>
             </select>
             <!-- Price Filter -->
             <label for="price-filter">Filter by Price:</label>
@@ -40,18 +46,15 @@
                 <option value="100">100</option>
             </select>
         </section>
-
         <!-- Places List -->
         <section id="places-list" class="places-grid">
             <!-- Place cards will be added here by JavaScript -->
         </section>
     </main>
-
     <!-- Footer -->
     <footer>
         <p>&copy; 2024 HBnB. All rights reserved.</p>
     </footer>
-
     <script src="scripts.js"></script>
 </body>
 </html>
