@@ -271,6 +271,41 @@ footer {
     border-radius: 5px;
 }
 
+/* ========== Admin Buttons ========== */
+.admin-buttons {
+    display: flex;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.edit-btn, .delete-btn {
+    flex: 1;
+    padding: 0.5rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+}
+
+.edit-btn {
+    background: #f39c12;
+    color: white;
+}
+
+.edit-btn:hover {
+    background: #e67e22;
+}
+
+.delete-btn {
+    background: #e74c3c;
+    color: white;
+}
+
+.delete-btn:hover {
+    background: #c0392b;
+}
+
 /* ========== Responsive Design ========== */
 @media (max-width: 768px) {
     .places-grid {

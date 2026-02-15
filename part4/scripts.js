@@ -1,19 +1,8 @@
 // API Configuration
 const API_BASE_URL = 'http://127.0.0.1:5000/api/v1';
 
-// ==================== Image Mapping ====================
-const placeImages = {
-    'cozy apartment': 'images/placeholder.jpg',
-    'luxury beach villa': 'images/villa.jpg',
-    'mountain cabin retreat': 'images/cabin.jpg'
-};
-
-function getPlaceImage(title) {
-    const key = title.toLowerCase();
-    return placeImages[key] || 'images/placeholder.jpg';
-}
-
 // ==================== Cookie Helper Functions ====================
+// Check for the JWT token in cookies and redirect unauthenticated users.
 function checkAuthentication() {
       const token = getCookie('token');
       if (!token) {
@@ -43,6 +32,19 @@ function checkAuth() {
     const token = getCookie('token');
     const loginLink = document.getElementById('login-link');
 
+    /*if (loginLink) {
+        if (token) {
+            loginLink.textContent = 'Logout';
+            loginLink.href = '#';
+            loginLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                logout();
+            });
+        } else {
+            loginLink.textContent = 'Login';
+            loginLink.href = 'login.html';
+        }
+    }*/
     if (!loginLink) return;
 
     if (!token) {
@@ -128,7 +130,22 @@ async function fetchPlaces(country = '') {
     }
 }
 
-function displayPlaces(places) {
+// Helper function to check if user is admin
+async function isUserAdmin() {
+    const token = getCookie('token');
+    if (!token) return false;
+    
+    try {
+        // Decode JWT token to get user info
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.is_admin || false;
+    } catch (error) {
+        console.error('Error decoding token:', error);
+        return false;
+    }
+}
+
+async function displayPlaces(places) {
     const container = document.getElementById('places-list');
     if (!container) return;
     container.innerHTML = '';
@@ -138,21 +155,78 @@ function displayPlaces(places) {
         return;
     }
 
+    // Check if user is admin
+    const isAdmin = await isUserAdmin();
+
     places.forEach(place => {
         const card = document.createElement('div');
         card.className = 'place-card';
         card.setAttribute('data-price', place.price_per_night || place.price);
-        card.setAttribute('data-description', place.description || '');
-        const imageUrl = getPlaceImage(place.title);
+        
+        // Admin buttons HTML
+        const adminButtons = isAdmin ? `
+            <div class="admin-buttons">
+                <button class="edit-btn" onclick="editPlace('${place.id}')">✏️ Edit</button>
+                <button class="delete-btn" onclick="deletePlace('${place.id}')">🗑️ Delete</button>
+            </div>
+        ` : '';
+        
         card.innerHTML = `
-            <img src="${imageUrl}" alt="${place.title}" onerror="this.src='images/placeholder.jpg'">
+            <img src="images/${getPlaceImage(place.title)}" alt="${place.title}" onerror="this.src='images/placeholder.jpg'">
             <h3>${place.title}</h3>
             <p class="price">$${place.price_per_night || place.price} per night</p>
             <p class="location">${place.city || ''}, ${place.country || ''}</p>
+            ${adminButtons}
             <a href="places.html?id=${place.id}" class="details-button">View Details</a>
         `;
         container.appendChild(card);
     });
+}
+
+// Function to get the right image for each place
+function getPlaceImage(title) {
+    if (title.toLowerCase().includes('cozy')) {
+        return 'cozy.jpg';
+    } else if (title.toLowerCase().includes('mountain') || title.toLowerCase().includes('cabin')) {
+        return 'mountain.jpg';
+    } else if (title.toLowerCase().includes('villa')) {
+        return 'villa.jpg';
+    } else {
+        return 'placeholder.jpg';
+    }
+}
+
+// Admin functions for Edit and Delete
+function editPlace(placeId) {
+    alert(`Edit functionality for place ${placeId} - Coming soon!`);
+    // يمكن إضافة الكود الفعلي للتعديل لاحقاً
+}
+
+async function deletePlace(placeId) {
+    if (!confirm('Are you sure you want to delete this place?')) {
+        return;
+    }
+    
+    const token = getCookie('token');
+    try {
+        const response = await fetch(`${API_BASE_URL}/places/${placeId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (response.ok) {
+            alert('Place deleted successfully!');
+            fetchPlaces(); // Reload places
+        } else {
+            const error = await response.json();
+            alert(error.error || 'Failed to delete place');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred while deleting place');
+    }
 }
 
 function filterByPrice() {
@@ -177,7 +251,6 @@ function filterByPrice() {
         }
     });
 }
-
 // ==================== Place Details ====================
 
 async function fetchPlaceDetails(placeId) {
@@ -211,11 +284,12 @@ function displayPlaceDetails(place) {
     const priceEl = document.getElementById('place-price');
     const locationEl = document.getElementById('place-location');
 
+    // بعض الـ APIs تستخدم name بدل title
     const placeTitle = place.title || place.name || 'Place';
 
     if (titleEl) titleEl.textContent = placeTitle;
     if (imageEl) {
-        imageEl.src = getPlaceImage(placeTitle);
+        imageEl.src = `images/${getPlaceImage(placeTitle)}`;
         imageEl.alt = placeTitle;
         imageEl.onerror = function() { this.src = 'images/placeholder.jpg'; };
     }
@@ -233,6 +307,7 @@ function displayPlaceDetails(place) {
         if (place.amenities && place.amenities.length > 0) {
             place.amenities.forEach(amenity => {
                 const li = document.createElement('li');
+                // amenity ممكن يكون string أو object
                 li.textContent = (typeof amenity === 'string') ? amenity : (amenity.name || 'Amenity');
                 amenitiesList.appendChild(li);
             });
@@ -262,7 +337,7 @@ function displayReviews(reviews) {
         reviewCard.innerHTML = `
             <h4>${review.user_name || 'Anonymous'}</h4>
             <p class="rating">Rating: ${review.rating}/5</p>
-            <p>${review.text}</p>
+            <p>${review.comment}</p>
         `;
         reviewsList.appendChild(reviewCard);
     });
@@ -272,27 +347,36 @@ async function addReview(event) {
     event.preventDefault();
 
     const token = checkAuthentication();
+    
+    // Check if user is admin
+    const isAdmin = await isUserAdmin();
+    if (isAdmin) {
+        alert('Admins cannot add reviews');
+        return;
+    }
+    
     const urlParams = new URLSearchParams(window.location.search);
     const placeId = urlParams.get('id');
     const rating = document.getElementById('rating').value;
-    const reviewText = document.getElementById('review-text') ? document.getElementById('review-text').value : document.getElementById('comment').value;
+    const comment = document.getElementById('comment').value;
 
     if (!placeId) {
         alert('No place selected');
         return;
     }
     try {
-        const response = await fetch(`${API_BASE_URL}/reviews/`, {
+        const response = await fetch(`${API_BASE_URL}/places/${placeId}/reviews`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ rating: parseInt(rating), text: reviewText, place_id: placeId })
+            body: JSON.stringify({ rating: parseInt(rating), comment })
         });
 
         if (response.ok) {
             alert('Review added successfully!');
+           // window.location.href = `place.html?id=${placeId}`;
             document.getElementById('review-form').reset();
         } else if (response.status === 401) {
             logout();
@@ -309,26 +393,8 @@ async function addReview(event) {
 // ==================== Filters ====================
 
 function filterByCountry() {
-    const selectedCity = document.getElementById('country-filter').value;
-    const placeCards = document.querySelectorAll('.place-card');
-
-    placeCards.forEach(card => {
-        if (!selectedCity) {
-            // Show all if "All Cities" is selected
-            card.style.display = 'block';
-        } else {
-            // Get the description from the card's data attribute
-            const description = card.getAttribute('data-description').toLowerCase();
-            const title = card.querySelector('h3').textContent.toLowerCase();
-            
-            // Check if the selected city is in the description or title
-            if (description.includes(selectedCity.toLowerCase()) || title.includes(selectedCity.toLowerCase())) {
-                card.style.display = 'block';
-            } else {
-                card.style.display = 'none';
-            }
-        }
-    });
+    const country = document.getElementById('country-filter').value;
+    fetchPlaces(country);
 }
 
 // ==================== Page Initialization ====================
@@ -352,28 +418,24 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchPlaces();
     }
 
-    if (currentPage.includes('places.html')) {
-        const urlParams = new URLSearchParams(window.location.search);
-        const placeId = urlParams.get('id');
+  if (currentPage.includes('places.html')) {
+      
+    checkAuthentication();
+      
+    const urlParams = new URLSearchParams(window.location.search);
+    const placeId = urlParams.get('id');
 
-        // Show Add Review button only if authenticated
-        const token = getCookie('token');
-        const addReviewBtn = document.getElementById('add-review-btn');
-        if (addReviewBtn) {
-            if (token && placeId) {
-                addReviewBtn.style.display = 'inline-block';
-                addReviewBtn.href = `add_review.html?id=${placeId}`;
-            } else {
-                addReviewBtn.style.display = 'none';
-            }
-        }
+    // Show Add Review form only if authenticated
+    /*const token = getCookie('token');
+    const addReviewSection = document.getElementById('add-review-btn');
+    if (addReviewSection) {
+        addReviewSection.style.display = token ? 'block' : 'none';
+    }*/
 
-        if (placeId) {
-            fetchPlaceDetails(placeId);
-        } else {
-            document.getElementById('place-title').textContent = 'Place not found';
-        }
+    if (placeId) {
+        fetchPlaceDetails(placeId);
     }
+}
 
     const countryFilter = document.getElementById('country-filter');
     if (countryFilter) {

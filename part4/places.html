@@ -13,13 +13,11 @@
         <img src="images/logo.png" alt="HBnB Logo" class="logo">
         <a href="login.html" class="login-button" id="login-link">Login</a>
     </header>
-
     <!-- Navigation -->
     <nav>
         <a href="index.html">&larr; Back to Places</a>
         <a href="login.html">Login</a>
     </nav>
-
     <!-- Main Content -->
     <main>
         <!-- Place Details -->
@@ -31,27 +29,49 @@
                 <p id="place-price" class="price"></p>
                 <p id="place-location" class="location"></p>
             </div>
-
             <!-- Amenities -->
             <div class="amenities">
                 <h3>Amenities</h3>
                 <ul id="amenities-list"></ul>
             </div>
         </section>
-
         <!-- Reviews Section -->
         <section class="reviews-section">
             <h2>Reviews</h2>
             <div id="reviews-list"></div>
-            <a id="add-review-btn" class="details-button" style="display: none;">Add Review</a>
+            
+            <!-- Add Review Form -->
+            <div id="add-review-section" class="form-container" style="margin-top: 2rem;">
+                <h3>Add Your Review</h3>
+                <form id="review-form" class="add-review form">
+                    <div class="form-group">
+                        <label for="rating">Rating:</label>
+                        <select id="rating" name="rating" required>
+                            <option value="">Select Rating</option>
+                            <option value="5">⭐⭐⭐⭐⭐ (5 - Excellent)</option>
+                            <option value="4">⭐⭐⭐⭐ (4 - Very Good)</option>
+                            <option value="3">⭐⭐⭐ (3 - Good)</option>
+                            <option value="2">⭐⭐ (2 - Fair)</option>
+                            <option value="1">⭐ (1 - Poor)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="comment">Your Review:</label>
+                        <textarea id="comment" name="comment" rows="5" required placeholder="Share your experience..."></textarea>
+                    </div>
+                    
+                    <button type="submit">Submit Review</button>
+                    
+                    <p id="error-message" class="error"></p>
+                </form>
+            </div>
         </section>
     </main>
-
     <!-- Footer -->
     <footer>
         <p>&copy; 2024 HBnB. All rights reserved.</p>
     </footer>
-
     <script src="scripts.js"></script>
 </body>
 </html>
