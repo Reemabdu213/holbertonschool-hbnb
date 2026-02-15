@@ -142,6 +142,7 @@ function displayPlaces(places) {
         const card = document.createElement('div');
         card.className = 'place-card';
         card.setAttribute('data-price', place.price_per_night || place.price);
+        card.setAttribute('data-description', place.description || '');
         const imageUrl = getPlaceImage(place.title);
         card.innerHTML = `
             <img src="${imageUrl}" alt="${place.title}" onerror="this.src='images/placeholder.jpg'">
@@ -316,11 +317,12 @@ function filterByCountry() {
             // Show all if "All Cities" is selected
             card.style.display = 'block';
         } else {
-            // Get the location text from the card
-            const locationText = card.querySelector('.location').textContent;
+            // Get the description from the card's data attribute
+            const description = card.getAttribute('data-description').toLowerCase();
+            const title = card.querySelector('h3').textContent.toLowerCase();
             
-            // Check if the selected city is in the location
-            if (locationText.includes(selectedCity)) {
+            // Check if the selected city is in the description or title
+            if (description.includes(selectedCity.toLowerCase()) || title.includes(selectedCity.toLowerCase())) {
                 card.style.display = 'block';
             } else {
                 card.style.display = 'none';
